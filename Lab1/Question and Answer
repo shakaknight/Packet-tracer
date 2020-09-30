@@ -1,0 +1,122 @@
+Question:
+Configure a DHCP on router one a follows:
+1)Excluded address range 10.1.1.1 to 10.1.1.100
+2)Pool name = PC
+3)Network Gateway = 10.1.110/24
+4) Default gateway = Router 1
+5) DNS server = router 1
+6)Test that PC can ping loop back of router 1
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Configuration:
+
+Router Configuration:
+
+Would you like to enter the initial configuration dialog? [yes/no]: no
+
+
+Press RETURN to get started!
+
+
+
+Router>
+Router>
+Router>
+Router>en
+Router#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+Router(config)#int g0/0/0
+Router(config-if)#ip add
+Router(config-if)#ip address 10.1.1.254 255.255.255.0
+Router(config-if)#no shutdown
+
+Router(config-if)#
+%LINK-5-CHANGED: Interface GigabitEthernet0/0/0, changed state to up
+
+Router(config-if)#exit
+Router(config)#int
+Router(config)#interface loo
+Router(config)#interface loopback 0
+
+Router(config-if)#
+%LINK-5-CHANGED: Interface Loopback0, changed state to up
+
+%LINEPROTO-5-UPDOWN: Line protocol on Interface Loopback0, changed state to up
+
+Router(config-if)#ip add
+Router(config-if)#ip address 1.1.1.1 255.255.255.0
+Router(config-if)#exit
+Router(config)#^Z
+Router#
+%SYS-5-CONFIG_I: Configured from console by console
+
+Router#sh ip int brief
+Interface              IP-Address      OK? Method Status                Protocol 
+GigabitEthernet0/0/0   10.1.1.254      YES manual up                    down 
+GigabitEthernet0/0/1   unassigned      YES unset  administratively down down 
+Loopback0              1.1.1.1         YES manual up                    up 
+Vlan1                  unassigned      YES unset  administratively down down
+Router#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+Router(config)#ip dhcp excluded-add
+Router(config)#ip dhcp excluded-address 10.1.1.1 10.1.1.100
+Router(config)#ip dhcp pool pc
+Router(dhcp-config)#network 10.1.1.0 255.255.255.0
+Router(dhcp-config)#default-router 10.1.1.254
+Router(dhcp-config)#end
+Router#
+%SYS-5-CONFIG_I: Configured from console by console
+
+Router#sh run
+Building configuration...
+
+Current configuration : 751 bytes
+!
+version 15.4
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname Router
+!
+!
+!
+!
+ip dhcp excluded-address 10.1.1.1 10.1.1.100
+!
+ip dhcp pool pc
+ network 10.1.1.0 255.255.255.0
+ default-router 10.1.1.254
+!
+!
+!
+
+Router#sh ip dhcp binding
+IP address       Client-ID/              Lease expiration        Type
+                 Hardware address
+Router#
+%LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/0/0, changed state to up
+
+Router#sh ip dhcp binding
+IP address       Client-ID/              Lease expiration        Type
+                 Hardware address
+10.1.1.101       0090.2BD9.69C8           --                     Automatic
+Router#png 10.1.1.101
+           ^
+% Invalid input detected at '^' marker.
+	
+Router#ping 10.1.1.101
+
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 10.1.1.101, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 0/4/15 ms
+
+Router#
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Check the connectivity:
+
+1)Open PC and request DHCP.
+2)Check the connectivity by pinging the router loopback 0 address (1.1.1.1).
+3)You can also ping PC fron router in the CLI.
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
